@@ -133,7 +133,7 @@ class Interpreter {
     }
     on ScopeException catch (e) {
       final ctx = currentContext;
-      throw RuntimeError(ctx, e.toString(), ctx.getLineColumn(node.loc));
+      throw RuntimeError(ctx, e.toString(), ctx.getLineColumn(node.loc), e);
     }
   }
 

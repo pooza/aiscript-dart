@@ -67,4 +67,16 @@ void main() {
     ''');
     expect(res, StrValue('foo'));
   });
+  test('RuntimeError preserves the wrapped ScopeException', () async {
+    // 未定義変数がどれだったかを、メッセージ文字列を parse せずに
+    // 取り出せること。ホスト側が失敗を分類するのに必要 (pooza/capsicum#830)。
+    try {
+      await exec('<: undefinedVariable');
+      fail('should have thrown');
+    } on RuntimeError catch (e) {
+      final cause = e.cause;
+      expect(cause, isA<NoSuchVariableException>());
+      expect((cause! as NoSuchVariableException).key, 'undefinedVariable');
+    }
+  });
 }
