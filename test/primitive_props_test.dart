@@ -102,6 +102,21 @@ void main() {
       expect(res, StrValue('el'));
     });
 
+    test('slice out of range', () async {
+      // JS String.prototype.slice 準拠でクランプする (pooza/capsicum#830)
+      final res = await exec('''
+        <: ["".slice(0, 10), "hello".slice(3, 99), "hello".slice(4, 2)]
+      ''');
+      expect(res, HasValue([StrValue(''), StrValue('lo'), StrValue('')]));
+    });
+
+    test('slice with negative index', () async {
+      final res = await exec('''
+        <: ["hello".slice(-3, 5), "hello".slice(-99, 2)]
+      ''');
+      expect(res, HasValue([StrValue('llo'), StrValue('he')]));
+    });
+
     test('codepoint_at', () async {
       final res = await exec('''
         <: "aiscript".split().map(@(x, _) { x.codepoint_at(0) })
@@ -176,6 +191,31 @@ void main() {
       expect(res, HasValue([
         HasValue([StrValue('camel'), StrValue('duck')]),
         HasValue([StrValue('ant'), StrValue('bison'), StrValue('camel'), StrValue('duck'), StrValue('elephant')])
+      ]));
+    });
+
+    test('slice out of range', () async {
+      // 空配列への slice(0 n) で RangeError になっていた (pooza/capsicum#830)
+      final res = await exec('''
+        let empty = []
+        let arr = ["a", "b", "c"]
+        <: [empty.slice(0, 10), arr.slice(1, 99), arr.slice(2, 1)]
+      ''');
+      expect(res, HasValue([
+        HasValue([]),
+        HasValue([StrValue('b'), StrValue('c')]),
+        HasValue([])
+      ]));
+    });
+
+    test('slice with negative index', () async {
+      final res = await exec('''
+        let arr = ["a", "b", "c", "d"]
+        <: [arr.slice(-2, 4), arr.slice(-99, 1)]
+      ''');
+      expect(res, HasValue([
+        HasValue([StrValue('c'), StrValue('d')]),
+        HasValue([StrValue('a')])
       ]));
     });
 

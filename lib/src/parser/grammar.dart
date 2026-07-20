@@ -3,10 +3,10 @@ import 'package:petitparser/petitparser.dart';
 // Main
 class AiScriptGrammarDefinition extends GrammarDefinition {
   @override
-  Parser start() => ref1(_trim, ref0(globalStatements)).end('invalid global statement');
+  Parser start() => ref1(_trim, ref0(globalStatements)).end(message: 'invalid global statement');
 
   // General
-  Parser name() => (pattern('a-zA-Z_') & pattern('a-zA-Z0-9_').starString()).flatten('name expected');
+  Parser name() => (pattern('a-zA-Z_') & pattern('a-zA-Z0-9_').starString()).flatten(message: 'name expected');
   Parser nameWithNamespace() => ref0(name) & (char(':') & ref0(name)).star();
   Parser whitespace() => anyOf(' \t\r\n');
   Parser spaceOnly() => anyOf(' \t');
@@ -276,7 +276,7 @@ class AiScriptGrammarDefinition extends GrammarDefinition {
   Parser exists() => string('exists') & ref0(identifier).skip(before: ref0(whitespace).plus());
   
   // Identifier
-  Parser identifier() => ref0(nameWithNamespace).flatten('identifier expected');
+  Parser identifier() => ref0(nameWithNamespace).flatten(message: 'identifier expected');
 
   // Template literal
   Parser tmpl() =>

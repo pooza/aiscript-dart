@@ -4,14 +4,14 @@ version: 0.6.0
 repository: https://github.com/LeadRDRK/aiscript-dart
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.5.0 <4.0.0'
 
 dependencies:
   es6_math: ^1.2.1
   path: ^1.8.3
-  petitparser: ^5.4.0
-  uuid: ^3.0.7
+  petitparser: ^7.0.2
+  uuid: ^4.5.1
 
 dev_dependencies:
-  lints: ^2.0.0
+  lints: ^6.0.0
   test: ^1.21.0

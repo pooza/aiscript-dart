@@ -1,4 +1,4 @@
-import 'package:petitparser/petitparser.dart' show Token;
+import 'package:petitparser/petitparser.dart' show Failure, Token;
 import 'parser_def.dart';
 
 import 'plugins/infix_to_fncall.dart';
@@ -55,13 +55,13 @@ class Parser {
     if (input.isEmpty) return ParseResult([], input);
 
     var res = _preParser.parse(input);
-    if (res.isFailure) {
+    if (res is Failure) {
       throw SyntaxError(res.message, Parser.getLineColumn(res.buffer, res.position));
     }
 
     final String source = res.value;
     res = _parser.parse(source);
-    if (res.isFailure) {
+    if (res is Failure) {
       throw SyntaxError(res.message, Parser.getLineColumn(res.buffer, res.position));
     }
 

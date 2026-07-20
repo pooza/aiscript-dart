@@ -57,7 +57,9 @@ final Map<String, Map<String, Value Function(Value)>> primitiveProps = {
       final value = target.cast<StrValue>().value;
       final start = args.check<NumValue>(0).value;
       final end = args.check<NumValue>(1).value;
-      return StrValue(_splitStr(value).sublist(start.toInt(), end.toInt()).join());
+      final chars = _splitStr(value);
+      final range = _clampRange(start, end, chars.length);
+      return StrValue(chars.sublist(range.$1, range.$2).join());
     }),
 
     'pick': (target) => NativeFnValue((args, __) async {
@@ -110,7 +112,8 @@ final Map<String, Map<String, Value Function(Value)>> primitiveProps = {
       final value = target.cast<ArrValue>().value;
       final start = args.check<NumValue>(0).value;
       final end = args.check<NumValue>(1).value;
-      return ArrValue(value.sublist(start.toInt(), end.toInt()));
+      final range = _clampRange(start, end, value.length);
+      return ArrValue(value.sublist(range.$1, range.$2));
     }),
 
     'join': (target) => NativeFnValue((args, __) async {
@@ -267,3 +270,20 @@ List<String> _splitStr(String str, [String? sep]) {
 }
 
 bool _isEmojiModifier(int char) => char >= 0x1F3FB && char <= 0x1F3FF;
+
+/// slice の範囲を JS `Array.prototype.slice` / `String.prototype.slice` 準拠で
+/// 丸める。負値は末尾からのオフセットとして扱い、範囲外はクランプする。
+///
+/// 本家 (@syuilo/aiscript) は JS のメソッドをそのまま呼んでおり範囲外でも
+/// 例外を投げないが、Dart の `sublist` は RangeError を投げるため補正が要る。
+/// 実在の Flash スクリプト (pooza/capsicum#830) が `arr.slice(0 n)` を
+/// 空配列に対して呼んでクラッシュしたことによる修正。
+(int, int) _clampRange(num start, num end, int length) {
+  int normalize(num v) {
+    final i = v.toInt();
+    return (i < 0 ? length + i : i).clamp(0, length);
+  }
+
+  final s = normalize(start);
+  return (s, normalize(end).clamp(s, length));
+}

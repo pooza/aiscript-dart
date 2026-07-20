@@ -1,5 +1,16 @@
 # AiScript for Dart
 
+> **これは [LeadRDRK/aiscript-dart](https://github.com/LeadRDRK/aiscript-dart) のフォークです。**
+>
+> [capsicum](https://github.com/pooza/capsicum) の Misskey Flash ネイティブ実行
+> （[pooza/capsicum#830](https://github.com/pooza/capsicum/issues/830)）で使うために、
+> 依存パッケージを現行世代へ更新し、本家 `@syuilo/aiscript` との非互換を随時修正している。
+> 作業ブランチは `capsicum`。
+>
+> 上流は 2023-09（AiScript 0.16 相当）で更新が止まっているが、実運用されている
+> Flash スクリプトは 0.16 の構文範囲に収まっており、そのまま実用になることを実測で確認している。
+> 汎用的な修正は上流へ PR で還元できる形を保つ。
+
 [![pub.dev](https://img.shields.io/pub/v/aiscript.svg)](https://pub.dev/packages/aiscript)
 [![build](https://github.com/LeadRDRK/aiscript-dart/actions/workflows/dart.yml/badge.svg)](https://github.com/LeadRDRK/aiscript-dart/actions/workflows/dart.yml)
 [![codecov](https://codecov.io/gh/LeadRDRK/aiscript-dart/branch/main/graph/badge.svg?token=DPVQPA9XOB)](https://codecov.io/gh/LeadRDRK/aiscript-dart)
