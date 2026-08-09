@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'package:es6_math/es6_math.dart';
 
 import 'runtime_error.dart';
+import 'seedrandom.dart';
 import 'value.dart';
 import 'fn_args.dart';
 
@@ -14,6 +15,24 @@ final _rng = Random();
 DateTime _dateArgOrNow(FnArgs args) {
   final ms = args.isNotEmpty ? args.check<NumValue>(0).value.toInt() : null;
   return ms != null ? DateTime.fromMillisecondsSinceEpoch(ms) : DateTime.now();
+}
+
+/// JS の `Number.prototype.toString()` 相当。`Math:gen_rng` が数値シードを
+/// `seed.value.toString()` で文字列化してから seedrandom に渡すため、ここが
+/// ずれると数値シードの出目が本家と揃わない (pooza/capsicum#896)。
+///
+/// Dart の `double.toString()` は 5.0 を `"5.0"` にするが JS は `"5"` を返す。
+/// 整数値の差だけを吸収し、それ以外は両者とも「往復できる最短表現」なので
+/// そのまま使う（1e21 以上の指数表記の閾値までは合わせていない）。
+String _jsNumToString(num value) {
+  if (value is int) return value.toString();
+  if (value.isNaN) return 'NaN';
+  if (value.isInfinite) return value.isNegative ? '-Infinity' : 'Infinity';
+  if (value == 0) return '0';
+  if (value == value.roundToDouble() && value.abs() < 1e21) {
+    return value.toStringAsFixed(0);
+  }
+  return value.toString();
 }
 
 final Map<String, Value> stdlib = {
@@ -456,29 +475,34 @@ final Map<String, Value> stdlib = {
     }
   }),
 
+  // 本家 aiscript 0.19.0 は `seedrandom(seed.value.toString())` を使う。
+  // 以前はここで文字列シードを Dart の `String.hashCode` に潰して `Random(int)`
+  // に渡していたため、シードを固定しても本家 Misskey と出目が一致しなかった
+  // (pooza/capsicum#896)。シード文字列の作り方・生成器・整数化の式のいずれも
+  // 本家と同じでなければ揃わないので、3 つとも合わせてある。
   'Math:gen_rng': NativeFnValue((args, __) async {
     final seed = args.check<Value>(0);
-    int seedVal;
+    final String seedStr;
     if (seed is NumValue) {
-      seedVal = seed.value.toInt();
+      seedStr = _jsNumToString(seed.value);
     }
     else if (seed is StrValue) {
-      seedVal = seed.value.hashCode;
+      seedStr = seed.value;
     }
     else {
       return NullValue();
     }
 
-    final rng = Random(seedVal);
+    final rng = SeedRandom(seedStr);
 
     return NativeFnValue((args, __) async {
       if (args.length >= 2) {
         final min = args.check<NumValue>(0);
         final max = args.check<NumValue>(1);
-        return NumValue(rng.nextInt(max.value.floor() - min.value.ceil() + 1) + min.value.ceil());
+        return NumValue(rng.nextInRange(min.value, max.value));
       }
       else {
-        return NumValue(rng.nextDouble());
+        return NumValue(rng.next());
       }
     });
   }),
